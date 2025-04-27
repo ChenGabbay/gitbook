@@ -4,7 +4,7 @@
 
 <table data-header-hidden><thead><tr><th width="239"></th><th></th></tr></thead><tbody><tr><td><strong>Authentication types</strong></td><td>basic authentication</td></tr><tr><td><strong>Evidence types</strong></td><td>Automated evidence</td></tr><tr><td><a href="broken-reference"><strong>Multiple accounts</strong></a></td><td><span data-gb-custom-inline data-tag="emoji" data-code="2716">✖️</span></td></tr><tr><td>Private cloud</td><td><span data-gb-custom-inline data-tag="emoji" data-code="2716">✖️</span></td></tr><tr><td>Collaboration features</td><td><span data-gb-custom-inline data-tag="emoji" data-code="2716">✖️</span></td></tr></tbody></table>
 
-#### Required permissions <a href="#h_0bb427264a" id="h_0bb427264a"></a>
+### Required permissions <a href="#h_0bb427264a" id="h_0bb427264a"></a>
 
 <table><thead><tr><th width="289">Permission</th><th>Description</th></tr></thead><tbody><tr><td>Read relevant workspaces</td><td>Grant read access to the relevant workspaces from which you want to collect data.</td></tr></tbody></table>
 
