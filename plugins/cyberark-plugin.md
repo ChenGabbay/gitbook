@@ -6,4 +6,4 @@
 
 ## Required permissions
 
-<table><thead><tr><th>Permission</th><th width="534">Description</th></tr></thead><tbody><tr><td>read-only</td><td><p>The minimal access level required is a read-only role.<br>The user generating the Authentication Client ID and Secret.</p><ul><li>test</li></ul></td></tr><tr><td>write</td><td>test</td></tr></tbody></table>
+<table><thead><tr><th>Permission</th><th width="534">Description</th></tr></thead><tbody><tr><td>read-only</td><td><p>The minimal access level required is a read-only role.<br>The user generating the Authentication Client ID and Secret.</p><ul><li>test</li></ul></td></tr><tr><td>write</td><td>test</td></tr><tr><td></td><td></td></tr></tbody></table>
