@@ -1,10 +1,6 @@
 ---
-title: required-plugin-permissions
+title: Required plugin permissions
 ---
-
-***
-
-## title: Required plugin permissions
 
 # Required permissions <a href="#h_0bb427264a" id="h_0bb427264a"></a>
 
