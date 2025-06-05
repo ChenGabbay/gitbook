@@ -21,9 +21,7 @@ layout:
 
 ## What you get from this plugin
 
-## Plugin setup <a href="#h_b849bca95f" id="h_b849bca95f"></a>
-
-
+## Plugin setup
 
 Access to content is further restricted by the user's permission and Access Token used.
 
