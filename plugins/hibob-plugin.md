@@ -25,8 +25,6 @@ layout:
 
 
 
-{% include "../.gitbook/includes/required-plugin-permissions.md" %}
-
 Access to content is further restricted by the user's permission and Access Token used.
 
 ### **Connecting to Box**
