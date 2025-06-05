@@ -21,6 +21,10 @@ layout:
 
 ## What you get from this plugin
 
+
+
+{% include "../.gitbook/includes/required-plugin-permissions.md" %}
+
 ## Plugin setup
 
 Access to content is further restricted by the user's permission and Access Token used.
