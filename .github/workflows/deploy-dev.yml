@@ -1,4 +1,3 @@
-
 name: Dev gitbook plugins permissions
 
 on:
@@ -14,7 +13,7 @@ env:
 
 
 jobs:
-  build and deploy:
+  build-and-deploy:
     name: Dev gitbook plugins permissions
     runs-on: ubuntu-latest
     steps:
