@@ -1,7 +1,12 @@
+import json
+import os
 from typing import Dict, List, Optional
 import markdown
 from bs4 import BeautifulSoup
 
+### CONSTS ###
+BLACKLIST_FILENAMES = ['template.md', 'readme.md']
+OUTPUT_DIR = './output'  # assume empty library in this path
 
 
 def _get__permissions_table_after_heading(soup: BeautifulSoup,
@@ -66,5 +71,40 @@ def _parse_permission_file(filename):
 
     return permissions_dict
 
+def _list_files(dir_namer, filter_files=True):
+    raw_files = os.listdir(dir_namer)
+    files = []
+    for temp_file in raw_files:
+        if filter_files and \
+                (temp_file in BLACKLIST_FILENAMES or temp_file.startswith('.') or not temp_file.endswith('.md')):
+            continue
+
+        files.append(os.path.join(dir_namer, temp_file))
+
+    return files
+
+def _write_jsons(jsons):
+    if 0 == len(jsons):
+        return
+
+    base_path = os.path.join(OUTPUT_DIR, os.path.split(jsons[0]['service_id'])[0])
+    os.makedirs(base_path)
+    for elm in jsons:
+        file_path = os.path.join(OUTPUT_DIR, elm['service_id'] + '.json')
+        try:
+            with open(file_path, 'w') as output:
+                output.write(json.dumps(elm))
+        except Exception as exc:
+            print("failed to generate JSON from file: " + str(file_path))
+            print(str(exc))
+            raise exc
+
+def parse():
+   plugins_files = _list_files('plugins')
+   all_permissions = []
+   for temp_plugin_filename in plugins_files:
+        all_permissions.append(_parse_permission_file(temp_plugin_filename))
+   _write_jsons(all_permissions)
+
 if __name__ == '__main__':
-    b = _parse_permission_file('plugins/page-1.md')
+    parse()
