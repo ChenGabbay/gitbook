@@ -12,6 +12,7 @@ env:
   GCS_PROJECT: ${{ secrets.GCS_PROJECT_DEVELOP }}
   GCS_SA_KEY: ${{ secrets.GCS_SA_KEY_DEVELOP }}
 
+
 jobs:
   build and deploy:
     name: Dev gitbook plugins permissions
