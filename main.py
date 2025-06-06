@@ -7,8 +7,10 @@ from bs4 import BeautifulSoup
 def _get__permissions_table_after_heading(soup: BeautifulSoup,
                                           heading_text: str) -> Optional[BeautifulSoup]:
     """Find a table that follows a specific heading."""
-    heading = soup.find('h2', string=heading_text)
-    return heading.find_next('table') if heading else None
+    anchor = soup.find('a', id='h_0bb427264a')
+    if anchor and anchor.parent and 'Required permissions' in anchor.parent.text:
+        return anchor.parent.find_next('table')
+    return None
 
 def _validate_table_columns(header_cells: List[BeautifulSoup], expected_columns: List[str]) -> bool:
     """Validate that the table has the expected column names."""
@@ -39,7 +41,7 @@ def _parse_permission_file(filename):
     }
 
 
-    permissions_table = _get__permissions_table_after_heading(soup, 'Required permissions')
+    permissions_table = _get__permissions_table_after_heading(soup, 'Required permissions <a href="#h_0bb427264a" id="h_0bb427264a"></a>')
     if not permissions_table:
         print(f"Warning: Could not find permissions table in {filename}")
         return permissions_dict
@@ -65,4 +67,4 @@ def _parse_permission_file(filename):
     return permissions_dict
 
 if __name__ == '__main__':
-    b = _parse_permission_file('cyberark-plugin.md')
+    b = _parse_permission_file('plugins/page-1.md')
