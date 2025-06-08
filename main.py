@@ -8,34 +8,61 @@ import argparse
 ### CONSTS ###
 BLACKLIST_FILENAMES = ['template.md', 'readme.md']
 OUTPUT_DIR = './output'  # assume empty library in this path
+PERMISSIONS_HEADING_TEXT = 'Required permissions'
+PERMISSIONS_HEADING_ID_ATTR = 'h_0bb427264a'
+EXPECTED_TABLE_HEADER_COLUMNS = ['Permission', 'Description']
 
-
-def _get__permissions_table_after_heading(soup: BeautifulSoup,
-                                          heading_text: str) -> Optional[BeautifulSoup]:
-    """Find a table that follows a specific heading."""
-    anchor = soup.find('a', id='h_0bb427264a')
-    if anchor and anchor.parent and 'Required permissions' in anchor.parent.text:
+def find_permissions_table_by_anchor(soup: BeautifulSoup) -> Optional[BeautifulSoup]:
+    """Find the permissions table by looking for the specific heading with anchor tag.
+    Args:
+        soup: beautifulSoup object of the parsed HTML 
+    Returns: beautifulSoup object of the permissions table if found, None otherwise
+    """
+    # Find the anchor tag with our specific ID
+    anchor = soup.find('a', id=PERMISSIONS_HEADING_ID_ATTR)
+    
+    # Check if we found the anchor and it's in a heading with our text
+    if anchor and anchor.parent and PERMISSIONS_HEADING_TEXT in anchor.parent.text:
         return anchor.parent.find_next('table')
     return None
 
-def _validate_table_columns(header_cells: List[BeautifulSoup], expected_columns: List[str]) -> bool:
-    """Validate that the table has the expected column names."""
-    if len(header_cells) != len(expected_columns):
-        return False
-    return all(cell.text.strip() == expected for cell, expected in
-                                                    zip(header_cells, expected_columns))
+def is_template_header_format(header_cells: List[BeautifulSoup]) -> bool:
+    """Check if table headers match the template format."""
+    return (len(header_cells) == len(EXPECTED_TABLE_HEADER_COLUMNS) and 
+            all(cell.text.strip() == expected 
+                for cell, expected in zip(header_cells, EXPECTED_TABLE_HEADER_COLUMNS)))
 
 def _parse_permission_row(row: BeautifulSoup) -> Optional[Dict[str, str]]:
     """Parse a single permission row from the table."""
     cells = row.find_all('td')
     if len(cells) < 2:
         return None
+    
+    # Handle description with list items
+    description_cell = cells[1]
+    list_items = description_cell.find_all('li')
+    if list_items:
+        description = [item.get_text(separator='\n').strip() for item in list_items]
+    else:
+        description = [description_cell.get_text(separator='\n').strip()]
+    
     return {
         'permission': cells[0].text.strip(),
-        'description': cells[1].get_text(separator='\n').strip()
+        'description': description
     }
 
 def _parse_permission_file(filename):
+    """
+    Read plugin guide file , look for the permissions table in it, and parse it into a dict in the following format:
+    {
+        'service_id': 'plugin_id path file',
+        'fields': {
+            'permission_name': ['description1', 'description2']
+            'permission_name2': ['description1', 'description2']
+            ...
+        }
+    }
+    """
     with open(filename, 'r', encoding='utf-8') as f:
         data =f.read()
     html_data = markdown.markdown(data).replace('\n', '')
@@ -46,39 +73,56 @@ def _parse_permission_file(filename):
         'fields': {}
     }
 
-
-    permissions_table = _get__permissions_table_after_heading(soup, 'Required permissions <a href="#h_0bb427264a" id="h_0bb427264a"></a>')
+    permissions_table = find_permissions_table_by_anchor(soup)
     if not permissions_table:
         print(f"Warning: Could not find permissions table in {filename}")
         return permissions_dict
-    header_row = permissions_table.find('tr')
 
+    header_row = permissions_table.find('tr')
     if not header_row:
         print(f"Warning: Could not find header row in {filename}")
         return permissions_dict
 
-    header_cells = header_row.find_all('th')
-    expected_columns = ['Permission', 'Description']
-    if not _validate_table_columns(header_cells, expected_columns):
-        print(f"Warning: Unexpected column names in {filename}. Expected {expected_columns},"
-              f"got {[cell.text.strip() for cell in header_cells]}")
+    table_header_cells = header_row.find_all('th')
+    if not is_template_header_format(table_header_cells):
+        print(f"Warning: Unexpected column names in {filename}")
         return permissions_dict
+    
     # Parse permission rows
-    for row in permissions_table.find_all('tr')[1:]:  # Skip header row
+    for row in permissions_table.find_all('tr')[1:]:  # Skip table header row
         permission_data = _parse_permission_row(row)
         if permission_data:
-            permissions_dict['fields'][permission_data['permission']] = [
-                                                permission_data['description']]
+            permissions_dict['fields'][permission_data['permission']] =  permission_data['description']
 
     return permissions_dict
 
-def filter_files(files: List[str], filter_files=True):
-    if filter_files:
-        files = [file for file in files if file not in BLACKLIST_FILENAMES and not file.startswith('.') and file.endswith('.md')]
-    return files
+def filter_markdown_files(files: List[str], should_filter=True) -> List[str]:
+    """Filter list of files to only include valid markdown plugin files.
+    
+    Args:
+        files: List of file paths to filter
+        should_filter: Whether to apply filtering rules
+        
+    Returns:
+        List of valid markdown plugin files
+    """
+    if not should_filter:
+        return files
+        
+    return [
+        file for file in files 
+        if (file.endswith('.md') and 
+            file not in BLACKLIST_FILENAMES and 
+            not file.startswith('.'))
+    ]
 
 def _write_jsons(jsons):
+    """
+    input: list of permissions dicts, where each dict has a service_id and fields dict
+    output: write the permissions dicts to the output directory
+    """
     if 0 == len(jsons):
+        print("No permissions to write")
         return
 
     base_path = os.path.join(OUTPUT_DIR, os.path.split(jsons[0]['service_id'])[0])
@@ -93,19 +137,30 @@ def _write_jsons(jsons):
             print(str(exc))
             raise exc
 
-def parse(changed_files=None):
-   if changed_files:
-       plugins_files = changed_files.split('\n')
-       print(plugins_files)
-       plugins_files = filter_files(plugins_files)
-   else:
-       print("No changed files provided")
-       return
-   
-   all_permissions = []
-   for temp_plugin_filename in plugins_files:
-        all_permissions.append(_parse_permission_file(temp_plugin_filename))
-   _write_jsons(all_permissions)
+def parse(changed_files: Optional[str] = None) -> None:
+    """Process plugin files and generate permissions JSON.
+    
+    Args:
+        changed_files: Optional string of newline-separated file paths to process.
+                                                                    If None, exit.
+    """
+    if not changed_files:
+        print("No changed files provided")
+        return
+        
+    plugins_files = changed_files.split('\n')
+    print(f"Processing files: {plugins_files}")
+    
+    valid_files = filter_markdown_files(plugins_files)
+    if not valid_files:
+        print("No valid markdown files found")
+        return
+        
+    all_permissions = [
+        _parse_permission_file(file) 
+        for file in valid_files
+    ]
+    _write_jsons(all_permissions)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process plugin files and generate permissions.')
