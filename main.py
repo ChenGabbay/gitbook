@@ -3,6 +3,7 @@ import os
 from typing import Dict, List, Optional
 import markdown
 from bs4 import BeautifulSoup
+import argparse
 
 ### CONSTS ###
 BLACKLIST_FILENAMES = ['template.md', 'readme.md']
@@ -83,6 +84,11 @@ def _list_files(dir_namer, filter_files=True):
 
     return files
 
+def filter_files(files: List[str], filter_files=True):
+    if filter_files:
+        files = [file for file in files if file not in BLACKLIST_FILENAMES and not file.startswith('.') and file.endswith('.md')]
+    return files
+
 def _write_jsons(jsons):
     if 0 == len(jsons):
         return
@@ -99,12 +105,21 @@ def _write_jsons(jsons):
             print(str(exc))
             raise exc
 
-def parse():
-   plugins_files = _list_files('plugins')
+def parse(changed_files=None):
+   if changed_files:
+       plugins_files = changed_files.split('\n')
+       plugins_files = filter_files(plugins_files)
+   else:
+       print("No changed files provided")
+       return
+   
    all_permissions = []
    for temp_plugin_filename in plugins_files:
         all_permissions.append(_parse_permission_file(temp_plugin_filename))
    _write_jsons(all_permissions)
 
 if __name__ == '__main__':
-    parse()
+    parser = argparse.ArgumentParser(description='Process plugin files and generate permissions.')
+    parser.add_argument('--changed-files', type=str, help='List of changed files, one per line')
+    args = parser.parse_args()
+    parse(args.changed_files)
