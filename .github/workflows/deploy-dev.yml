@@ -32,9 +32,38 @@ jobs:
         run: |-
           mkdir -p $OUTPUT_DIRECTORY
       
+      - name: Find changed files in plugins/
+        id: changed-files
+        run: |
+          # Get the commit before the workflow started
+          git fetch origin main
+          
+          # Show detailed commit information
+          echo "GitHub Event Context:"
+          echo "Event type: ${{ github.event_name }}"
+          echo "Before commit (old state): ${{ github.event.before }}"
+          echo "After commit (new state): ${{ github.event.after }}"
+          echo "Commit message: ${{ github.event.head_commit.message }}"
+          
+          # Compare plugins folder before and after
+          echo "Files in plugins folder before:"
+          git ls-tree -r --name-only ${{ github.event.before }} -- plugins/
+          echo "Files in plugins folder after:"
+          git ls-tree -r --name-only ${{ github.event.after }} -- plugins/
+          
+          # Get changed files in plugins folder
+          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} -- plugins/ > changed_files.txt
+          echo "Changed files in plugins folder:"
+          cat changed_files.txt
+          
+          # Set output variable with changed files
+          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+          cat changed_files.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
       - name: Generate permissions
         run: |
-          python main.py
+          python main.py --changed-files "$(cat changed_files.txt)"
       
       - name: Authenticate to gcloud Kdev
         uses: 'google-github-actions/auth@v1'
@@ -48,5 +77,5 @@ jobs:
 
       - name: Deploy
         run: |-
-          gsutil -m rsync -R "$OUTPUT_DIRECTORY" gs://$GCS_BUCKET/plugins/
+          gsutil -m cp -r "$OUTPUT_DIRECTORY"/* gs://$GCS_BUCKET/plugins/
       
