@@ -72,18 +72,6 @@ def _parse_permission_file(filename):
 
     return permissions_dict
 
-def _list_files(dir_namer, filter_files=True):
-    raw_files = os.listdir(dir_namer)
-    files = []
-    for temp_file in raw_files:
-        if filter_files and \
-                (temp_file in BLACKLIST_FILENAMES or temp_file.startswith('.') or not temp_file.endswith('.md')):
-            continue
-
-        files.append(os.path.join(dir_namer, temp_file))
-
-    return files
-
 def filter_files(files: List[str], filter_files=True):
     if filter_files:
         files = [file for file in files if file not in BLACKLIST_FILENAMES and not file.startswith('.') and file.endswith('.md')]
@@ -108,6 +96,7 @@ def _write_jsons(jsons):
 def parse(changed_files=None):
    if changed_files:
        plugins_files = changed_files.split('\n')
+       print(plugins_files)
        plugins_files = filter_files(plugins_files)
    else:
        print("No changed files provided")
