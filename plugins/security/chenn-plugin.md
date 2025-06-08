@@ -1,2 +1,2 @@
-# chenn plugin
+# chenns plugin
 
