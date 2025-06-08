@@ -125,9 +125,9 @@ def _write_jsons(jsons):
         print("No permissions to write")
         return
 
-    base_path = os.path.join(OUTPUT_DIR, os.path.split(jsons[0]['service_id'])[0])
-    os.makedirs(base_path)
     for elm in jsons:
+        base_path = os.path.join(OUTPUT_DIR, os.path.split(elm['service_id'])[0])
+        os.makedirs(base_path, exist_ok=True)
         file_path = os.path.join(OUTPUT_DIR, elm['service_id'] + '.json')
         try:
             with open(file_path, 'w') as output:
