@@ -35,8 +35,9 @@ jobs:
       - name: Find changed files in plugins/
         id: changed-files
         run: |
-          # Get the commit before the workflow started
-          git fetch origin main
+          # Get the specific commits we need to compare
+          git fetch origin ${{ github.event.before }}
+          git fetch origin ${{ github.event.after }}
           
           # Show detailed commit information
           echo "GitHub Event Context:"
@@ -47,9 +48,9 @@ jobs:
           
           # Compare plugins folder before and after
           echo "Files in plugins folder before:"
-          git ls-tree -r --name-only ${{ github.event.before }} -- plugins/
+          git ls-tree -r --name-only ${{ github.event.before }} -- plugins/ || echo "No files found in before state"
           echo "Files in plugins folder after:"
-          git ls-tree -r --name-only ${{ github.event.after }} -- plugins/
+          git ls-tree -r --name-only ${{ github.event.after }} -- plugins/ || echo "No files found in after state"
           
           # Get changed files in plugins folder
           git diff --name-only ${{ github.event.before }} ${{ github.event.after }} -- plugins/ > changed_files.txt
