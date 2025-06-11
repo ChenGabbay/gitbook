@@ -156,10 +156,17 @@ def parse(changed_files: Optional[str] = None) -> None:
         print("No valid markdown files found")
         return
         
-    all_permissions = [
-        _parse_permission_file(file) 
-        for file in valid_files
-    ]
+    all_permissions = []
+    files_without_fields = {'service_ids': []}
+    
+    for file in valid_files:
+        permission_dict = _parse_permission_file(file)
+        if permission_dict['fields']:
+            all_permissions.append(permission_dict)
+        else:
+            files_without_fields['service_ids'].append(permission_dict['service_id'])
+    
+    print("Required permissions templete was not found in the following files:", files_without_fields['service_ids'])
     _write_jsons(all_permissions)
 
 if __name__ == '__main__':
