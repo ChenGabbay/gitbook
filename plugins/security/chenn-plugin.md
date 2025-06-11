@@ -1,2 +1,2 @@
-# chenns plugin
+# chenSns plugin
 
